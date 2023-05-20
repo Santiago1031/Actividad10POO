@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from errores import LongitudClaveError, MayusculaClaveError, MinusculaClaveError, NumeroClaveError, CaracterEspecialError, CalistoClaveError
+from errores import ValidadorError, NoCumpleLongitudMinimaError, NoTieneLetraMayusculaError, NoTieneLetraMinusculaError, NoTieneNumeroError, NoTieneCaracterEspecialError, NoTienePalabraSecretaError
 
 class ReglaValidacion(ABC, _longitud_esperada: int):
     def __init__(self, longitud_esperada: int):
