@@ -1,66 +1,89 @@
 from abc import ABC, abstractmethod
-from errores import ValidadorError, NoCumpleLongitudMinimaError, NoTieneLetraMayusculaError, NoTieneLetraMinusculaError, NoTieneNumeroError, NoTieneCaracterEspecialError, NoTienePalabraSecretaError
 
-class ReglaValidacion(ABC, _longitud_esperada: int):
+from validadorclave.modelo.errores import NoCumpleLongitudMinimaError, NoTieneLetraMayusculaError, \
+    NoTieneLetraMinusculaError, NoTieneNumeroError, NoTieneCaracterEspecialError, NoTienePalabraSecretaError
+
+
+class ReglaValidacion(ABC):
     def __init__(self, longitud_esperada: int):
-        self._longitud_esperada = longitud_esperada
+        self._longitud_esperada: int = longitud_esperada
+    def _validar_longitud(self, clave: str) -> bool:
+        return len(clave) > self._longitud_esperada
+
+    def _contiene_mayuscula(self, clave: str)-> bool:
+        for letra in clave:
+            if letra.isupper():
+                return True
+        return False
+
+    def _contiene_minuscula(self, clave: str)-> bool:
+        for letra in clave:
+            if letra.islower():
+                return True
+        return False
+
+    def _contiene_numero(self, clave: str)-> bool:
+        for letra in clave:
+            if letra.isdigit():
+                return True
+        return False
 
     @abstractmethod
     def es_valida(clave: str)-> bool:
         pass
-    def _validar_longitud(clave: str) -> bool:
-        if len(clave) < self._longitud_esperada:
-            raise LongitudClaveError()
-
-    def _contiene_mayuscula(clave: str)-> bool:
-        if not any(char.isupper() for char in clave):
-            raise MayusculaClaveError()
-
-    def _contiene_minuscula(clave: str)-> bool:
-        if not any(char.islower() for char in clave):
-            raise MinusculaClaveError()
-
-    def _contiene_numero(clave: str)-> bool:
-        if not any(char.isdigit() for char in clave):
-            raise NumeroClaveError()
 
 
 class ReglaValidacionGanimedes(ReglaValidacion):
 
     def __init__(self):
+        super().__init__(longitud_esperada=8)
 
     def contiene_caracter_especial(self, clave: str)-> bool:
-        if not any(char in '@_#$%' for char in clave):
-            raise CaracterEspecialError()
+        for letra in clave:
+            if letra in "@_#$%":
+                return True
+        return False
 
     def es_valida(self, clave: str)-> bool:
-        self._validar_longitud(clave)
-        self._contiene_mayuscula(clave)
-        self._contiene_minuscula(clave)
-        self._contiene_numero(clave)
-        self.contiene_caracter_especial(clave)
-        return True
+        if not self._validar_longitud(clave):
+            raise NoCumpleLongitudMinimaError()
 
+        if not self._contiene_mayuscula(clave):
+            raise NoTieneLetraMayusculaError()
+
+        if not self._contiene_minuscula(clave):
+            raise NoTieneLetraMinusculaError()
+
+        if not self._contiene_numero(clave):
+            raise NoTieneNumeroError()
+
+        if not self.contiene_caracter_especial(clave):
+            raise NoTieneCaracterEspecialError()
+
+        return True
 
 class ReglaValidacionCalisto(ReglaValidacion):
 
     def __init__(self):
+        super().__init__(longitud_esperada=6)
     def contiene_calisto(self, clave: str)-> bool:
         if clave.find('calisto') == -1:
             raise CalistoClaveError()
 
     def es_valida(self, clave: str)-> bool:
-        self._validar_longitud(clave)
-        self._contiene_mayuscula(clave)
-        self._contiene_minuscula(clave)
-        self._contiene_numero(clave)
-        self.contiene_calisto(clave)
-        return True
+        if not self._validar_longitud(clave):
+            raise NoCumpleLongitudMinimaError()
 
+        if not self._contiene_numero(clave):
+            raise NoTieneNumeroError()
+
+        if not self.contiene_calisto(clave):
+            raise NoTienePalabraSecretaError()
+        return True
 
 class Validador:
     def __init__(self, regla: ReglaValidacion):
-        self.regla = regla
+        self.regla: ReglaValidacion = regla
 
     def es_valida(self, clave: str)-> bool:
         return self.regla.es_valida(clave)
